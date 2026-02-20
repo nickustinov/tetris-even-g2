@@ -6,6 +6,12 @@ Classic Tetris game for [Even Realities G2](https://www.evenrealities.com/) smar
 
 Swipe to move, tap to rotate. Global best score shared across all players via Redis.
 
+### Play now
+
+Scan this QR code in the Even Realities app (Even Hub page) to play on your G2 glasses with the shared global score system:
+
+<img src="qr.png" width="200" />
+
 ## Architecture
 
 The game uses three different page layouts, switching between them via `rebuildPageContainer`:
