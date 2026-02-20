@@ -1,7 +1,7 @@
 import { FIELD_COLS, FIELD_ROWS, LINES_PER_LEVEL, BASE_TICK_MS, MIN_TICK_MS, TICK_SPEED_STEP } from './layout'
 import { PIECE_CELLS, boxSize } from './pieces'
 import type { PieceType } from './pieces'
-import { game, drawFromBag, saveHighScore } from './state'
+import { game, drawFromBag, submitScore } from './state'
 import type { ActivePiece } from './state'
 
 // ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ export function spawnPiece(): boolean {
   if (collides(row, col, type, 0)) {
     game.running = false
     game.over = true
-    saveHighScore(game.score)
+    void submitScore(game.score)
     return false
   }
 

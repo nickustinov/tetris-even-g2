@@ -1,6 +1,6 @@
 import type { EvenAppBridge } from '@evenrealities/even_hub_sdk'
 import { appendEventLog } from '../_shared/log'
-import { game, setBridge, resetGame } from './state'
+import { game, setBridge, resetGame, fetchBestScore } from './state'
 import { tick, spawnPiece, currentTickMs } from './game'
 import { initDisplay, pushFrame, showSplash } from './renderer'
 import { onEvenHubEvent, setStartGame } from './events'
@@ -59,5 +59,13 @@ export async function initApp(appBridge: EvenAppBridge): Promise<void> {
   })
 
   await initDisplay()
+
+  fetchBestScore().then(() => {
+    appendEventLog(`Score: fetched, highScore=${game.highScore}`)
+    if (!game.running) void pushFrame()
+  }).catch((err) => {
+    appendEventLog(`Score: fetch failed: ${err}`)
+  })
+
   appendEventLog('Tetris: ready. Tap to start.')
 }
