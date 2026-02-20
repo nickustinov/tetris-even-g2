@@ -9,7 +9,7 @@ export const FIELD_COLS = 10
 export const FIELD_ROWS = ROWS
 
 // Gravity tick (ms) – decreases with level
-export const BASE_TICK_MS = 600
+export const BASE_TICK_MS = 800
 export const MIN_TICK_MS = 200
 export const TICK_SPEED_STEP = 50
 
