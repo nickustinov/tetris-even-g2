@@ -1,16 +1,10 @@
-# Tetris for Even G2
+# Blocks for Even G2
 
 > See also: [G2 development notes](https://github.com/nickustinov/even-g2-notes/blob/main/G2.md) – hardware specs, UI system, input handling and practical patterns for Even Realities G2.
 
-Classic Tetris game for [Even Realities G2](https://www.evenrealities.com/) smart glasses.
+Block-stacking game for [Even Realities G2](https://www.evenrealities.com/) smart glasses.
 
-Swipe to move, tap to rotate. Global best score shared across all players via Redis.
-
-### Play now
-
-Scan this QR code in the Even Realities app (Even Hub page) to play on your G2 glasses with the shared global score system:
-
-<img src="qr.png" width="200" />
+Swipe to move, tap to rotate. Best score tracked locally across games.
 
 ## Architecture
 
@@ -40,14 +34,6 @@ The loop awaits each text push before scheduling the next tick. If a push is sti
 - Scoring: 100/300/500/800 per 1/2/3/4 lines (× level)
 - Level increases every 5 lines, gravity speeds up from 600ms to 200ms
 
-### Global best score
-
-The best score is shared across all players via a Redis-backed API (`/api/best-score`). The Vercel serverless function uses a Lua script for atomic compare-and-set – a new score is only written if it exceeds the current best. The Redis key is `tetris-even-g2:best`.
-
-On app start, the current best score is fetched and displayed on the splash screen. When a game ends, the player's score is submitted. If it beats the global best, Redis is updated and the new best is shown immediately.
-
-Without `REDIS_URL` configured, scores won't persist between sessions.
-
 ## Controls
 
 | Input | Action |
@@ -72,8 +58,6 @@ g2/
   events.ts      Event normalisation + input dispatch
   layout.ts      Display and grid constants
   logo.png       Splash screen logo (200×100)
-api/
-  best-score.js  Vercel serverless function (Redis)
 ```
 
 ## Setup
@@ -82,15 +66,6 @@ api/
 npm install
 npm run dev
 ```
-
-### Run with even-dev simulator
-
-```bash
-cd /path/to/even-dev
-REDIS_URL="redis://..." APP_PATH=/path/to/tetris-even-g2 ./start-even.sh
-```
-
-Set `REDIS_URL` to enable the global best score API. Without it, scores won't persist.
 
 ### Run on real glasses
 
@@ -104,13 +79,11 @@ npm run qr    # generates QR code for http://<your-ip>:5173
 ### Package for distribution
 
 ```bash
-npm run pack  # builds and creates tetris.ehpk
+npm run pack  # builds and creates blocks.ehpk
 ```
 
 ## Tech stack
 
 - **G2 frontend:** TypeScript + [Even Hub SDK](https://www.npmjs.com/package/@evenrealities/even_hub_sdk)
 - **Build:** [Vite](https://vitejs.dev/)
-- **Backend:** [Redis](https://redis.io/) via [ioredis](https://github.com/redis/ioredis) (global best score)
-- **Hosting:** [Vercel](https://vercel.com/) (serverless API + static frontend)
 - **CLI:** [evenhub-cli](https://www.npmjs.com/package/@evenrealities/evenhub-cli)

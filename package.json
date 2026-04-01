@@ -1,26 +1,22 @@
 {
-  "name": "tetris-even-g2",
+  "name": "blocks-even-g2",
   "version": "1.0.0",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
     "preview": "vite preview",
     "qr": "evenhub qr --http --port 5173",
-    "pack": "npm run build && evenhub pack app.json dist -o tetris.ehpk"
+    "pack": "npm run build && evenhub pack app.json dist -o blocks.ehpk"
   },
   "dependencies": {
-    "@evenrealities/even_hub_sdk": "^0.0.7",
-    "@jappyjan/even-realities-ui": "^0.0.8",
-    "ioredis": "^5.9.3",
+    "@evenrealities/even_hub_sdk": "^0.0.9",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@evenrealities/evenhub-cli": "^0.1.5",
-    "@types/node": "^25.3.0",
+    "@evenrealities/evenhub-cli": "^0.1.11",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@vercel/node": "^5.6.6",
     "typescript": "^5.9.3",
     "vite": "^7.3.1"
   }

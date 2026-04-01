@@ -38,7 +38,7 @@ async function loadImage(url: string, name: string): Promise<number[] | null> {
     const buf = await res.arrayBuffer()
     return Array.from(new Uint8Array(buf))
   } catch {
-    appendEventLog(`Tetris: failed to load ${name}`)
+    appendEventLog(`Blocks: failed to load ${name}`)
     return null
   }
 }
@@ -74,11 +74,7 @@ type PageMode = 'splash' | 'game' | 'gameover'
 let currentPage: PageMode = 'splash'
 
 function splashText(): string {
-  const parts: string[] = []
-  if (game.highScore > 0) parts.push(`Best: ${game.highScore}`)
-  parts.push('Tap to start')
-  parts.push('Swipe to move')
-  return parts.join(' \u00B7 ')
+  return `Best: ${game.highScore} \u00B7 Tap to start \u00B7 Swipe to move`
 }
 
 function buildImagePage(text: string, textX: number): object {
@@ -298,10 +294,7 @@ function renderGrid(): string {
 }
 
 function gameOverText(): string {
-  const parts = [`Score: ${game.score}`]
-  if (game.highScore > 0) parts.push(`Best: ${game.highScore}`)
-  parts.push('Tap to play again')
-  return parts.join(' \u00B7 ')
+  return `Score: ${game.score} \u00B7 Best: ${game.highScore} \u00B7 Tap to play again`
 }
 
 // ---------------------------------------------------------------------------
@@ -369,5 +362,5 @@ export async function showSplash(): Promise<void> {
 export async function initDisplay(): Promise<void> {
   await loadImages()
   await setupSplashPage()
-  appendEventLog('Tetris: display initialized')
+  appendEventLog('Blocks: display initialized')
 }

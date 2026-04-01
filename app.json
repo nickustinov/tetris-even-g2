@@ -1,8 +1,20 @@
 {
-  "package_id": "com.nickustinov.tetris",
-  "name": "tetris",
+  "package_id": "com.nickustinov.blocks",
+  "edition": "202601",
+  "name": "Blocks",
   "version": "1.0.0",
-  "description": "Tetris game for Even G2 smart glasses",
+  "min_app_version": "0.1.0",
+  "min_sdk_version": "0.0.9",
+  "supported_languages": ["en"],
+  "tagline": "Block-stacking game for Even G2 smart glasses",
+  "description": "Block-stacking game for Even G2 smart glasses",
   "author": "nickustinov",
-  "entrypoint": "index.html"
+  "entrypoint": "index.html",
+  "permissions": [
+    {
+      "name": "network",
+      "desc": "n/a",
+      "whitelist": []
+    }
+  ]
 }

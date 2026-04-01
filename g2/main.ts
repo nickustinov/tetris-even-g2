@@ -16,34 +16,34 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   })
 }
 
-export function createTetrisActions(setStatus: SetStatus): AppActions {
+export function createBlocksActions(setStatus: SetStatus): AppActions {
   let connected = false
 
   return {
     async connect() {
-      setStatus('Tetris: connecting to Even bridge...')
-      appendEventLog('Tetris: connect requested')
+      setStatus('Blocks: connecting to Even bridge...')
+      appendEventLog('Blocks: connect requested')
 
       try {
         const bridge = await withTimeout(waitForEvenAppBridge(), 6000)
         await initApp(bridge)
         connected = true
-        setStatus('Tetris: connected. Tap to start!')
-        appendEventLog('Tetris: connected to bridge')
+        setStatus('Blocks: connected. Tap to start!')
+        appendEventLog('Blocks: connected to bridge')
       } catch (err) {
-        console.error('[tetris] connect failed', err)
-        setStatus('Tetris: bridge not found.')
-        appendEventLog('Tetris: connection failed')
+        console.error('[blocks] connect failed', err)
+        setStatus('Blocks: bridge not found.')
+        appendEventLog('Blocks: connection failed')
       }
     },
 
     async action() {
       if (!connected) {
-        setStatus('Tetris: not connected')
+        setStatus('Blocks: not connected')
         return
       }
       startGame()
-      setStatus('Tetris: new game!')
+      setStatus('Blocks: new game!')
     },
   }
 }

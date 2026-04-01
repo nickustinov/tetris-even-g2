@@ -1,13 +1,13 @@
-import { createTetrisActions } from './main'
+import { createBlocksActions } from './main'
 import type { AppModule } from '../_shared/app-types'
 
 export const app: AppModule = {
-  id: 'tetris',
-  name: 'Tetris',
-  pageTitle: 'Tetris',
+  id: 'blocks',
+  name: 'Blocks',
+  pageTitle: 'Blocks',
   autoConnect: true,
-  initialStatus: 'Tetris ready',
-  createActions: createTetrisActions,
+  initialStatus: 'Blocks ready',
+  createActions: createBlocksActions,
 }
 
 export default app
