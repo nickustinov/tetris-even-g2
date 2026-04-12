@@ -16,7 +16,7 @@ import { game, bridge } from './state'
 // Unicode characters
 // ---------------------------------------------------------------------------
 
-const EMPTY = '\u25A1'     // □ empty playfield cell
+const EMPTY = '\u3000'     // ideographic space (fullwidth, same width as CJK chars)
 const FILLED = '\u25A6'    // ▦ filled cell / active piece
 const SEPARATOR = '\u2502' // │ divider
 
@@ -169,6 +169,9 @@ async function setupGamePage(initialContent: string): Promise<void> {
         height: DISPLAY_HEIGHT,
         isEventCapture: 0,
         paddingLength: 0,
+        borderWidth: 1,
+        borderColor: 10,
+        borderRadius: 4,
       }),
     ],
   }
@@ -287,7 +290,7 @@ function renderGrid(): string {
     // Info panel
     text += infoLines[r] ?? ''
 
-    text += '\n'
+    if (r < FIELD_ROWS - 1) text += '\n'
   }
 
   return text

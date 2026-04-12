@@ -24,9 +24,23 @@ export type GameState = {
   grounded: boolean   // piece touched down, locks on next tick if still stuck
 }
 
+const HIGH_SCORE_KEY = 'blocks_high_score'
+
+export async function loadHighScore(): Promise<void> {
+  if (!bridge) return
+  const value = await bridge.getLocalStorage(HIGH_SCORE_KEY)
+  if (value) {
+    const parsed = parseInt(value, 10)
+    if (!isNaN(parsed)) game.highScore = parsed
+  }
+}
+
 export function updateHighScore(): void {
   if (game.score > game.highScore) {
     game.highScore = game.score
+    if (bridge) {
+      void bridge.setLocalStorage(HIGH_SCORE_KEY, String(game.highScore))
+    }
   }
 }
 
