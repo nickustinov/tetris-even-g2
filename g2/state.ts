@@ -21,6 +21,7 @@ export type GameState = {
   level: number
   running: boolean
   over: boolean
+  quit: boolean
   grounded: boolean   // piece touched down, locks on next tick if still stuck
 }
 
@@ -74,6 +75,7 @@ export function resetGame(): void {
   game.level = 1
   game.running = true
   game.over = false
+  game.quit = false
   game.grounded = false
 }
 
@@ -88,6 +90,7 @@ export const game: GameState = {
   level: 1,
   running: false,
   over: false,
+  quit: false,
   grounded: false,
 }
 

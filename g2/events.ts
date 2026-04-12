@@ -72,7 +72,7 @@ export function onEvenHubEvent(event: EvenHubEvent): void {
     case OsEventTypeList.DOUBLE_CLICK_EVENT:
       if (game.running) {
         game.running = false
-        game.over = true
+        game.quit = true
         updateHighScore()
       } else {
         void bridge?.shutDownPageContainer(1)

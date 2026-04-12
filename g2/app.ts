@@ -33,6 +33,12 @@ async function gameLoop(): Promise<void> {
     const elapsed = Date.now() - start
     await sleep(Math.max(0, tickMs - elapsed))
   }
+
+  if (game.quit) {
+    game.quit = false
+    await showSplash()
+    appendEventLog('Blocks: quit to menu')
+  }
 }
 
 export function startGame(): void {
