@@ -9,14 +9,18 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-async function gameLoop(): Promise<void> {
+// Token shared across the gameLoop's awaits. startGame replaces it before
+// spawning a new loop, so any previous loop that wakes up from sleep sees a
+// stale token and exits instead of continuing to tick alongside the new one.
+let activeLoopToken: object = {}
+
+async function gameLoop(token: object): Promise<void> {
   appendEventLog('Blocks: game loop started')
 
-  // Spawn the first piece
   spawnPiece()
   await pushFrame()
 
-  while (game.running) {
+  while (game.running && activeLoopToken === token) {
     const tickMs = currentTickMs()
     const start = Date.now()
 
@@ -36,6 +40,9 @@ async function gameLoop(): Promise<void> {
     await sleep(Math.max(0, tickMs - elapsed))
   }
 
+  // Only the active loop is allowed to drive the post-game transition.
+  if (activeLoopToken !== token) return
+
   if (game.quit) {
     game.quit = false
     await showSplash()
@@ -52,8 +59,10 @@ export function startGame(): void {
     return
   }
   resetGame()
+  const token = {}
+  activeLoopToken = token
   void pushFrame().then(() => {
-    void gameLoop()
+    void gameLoop(token)
   })
   appendEventLog('Blocks: new game started')
 }

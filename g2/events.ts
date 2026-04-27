@@ -13,6 +13,12 @@ export function setStartGame(fn: () => void): void {
 const SCROLL_COOLDOWN_MS = 150
 let lastScrollTime = 0
 
+let confirmInputSuppressUntil = 0
+// After confirming exit, ignore taps until the game loop has a chance to wind
+// down – otherwise a trailing release event restarts the game while the old
+// loop is still alive, stacking concurrent loops and accelerating the tick.
+let restartSuppressUntil = 0
+
 function scrollThrottled(): boolean {
   const now = Date.now()
   if (now - lastScrollTime < SCROLL_COOLDOWN_MS) return true
@@ -78,6 +84,7 @@ function confirmExit(): void {
   game.running = false
   game.quit = true
   updateHighScore()
+  restartSuppressUntil = Date.now() + 1000
   appendEventLog('ACTION: exit confirmed')
 }
 
@@ -91,6 +98,10 @@ export function onEvenHubEvent(event: EvenHubEvent): void {
 
   // While the confirm page is shown, route everything to its handler.
   if (game.confirmingExit) {
+    // Suppress trailing input from the original double-tap that triggered the
+    // confirm – on hardware, a second tap of the dbl-click can arrive on the
+    // freshly rebuilt list as a phantom CLICK and cancel the dialog instantly.
+    if (Date.now() < confirmInputSuppressUntil) return
     if (eventType === OsEventTypeList.DOUBLE_CLICK_EVENT) {
       cancelExit()
       return
@@ -107,6 +118,7 @@ export function onEvenHubEvent(event: EvenHubEvent): void {
     case OsEventTypeList.DOUBLE_CLICK_EVENT:
       if (game.running) {
         game.confirmingExit = true
+        confirmInputSuppressUntil = Date.now() + 600
         void showExitConfirm()
       } else {
         void bridge?.shutDownPageContainer(1)
@@ -116,7 +128,7 @@ export function onEvenHubEvent(event: EvenHubEvent): void {
     case OsEventTypeList.CLICK_EVENT:
       if (game.running) {
         rotate()
-      } else {
+      } else if (Date.now() >= restartSuppressUntil) {
         startGameFn()
       }
       break

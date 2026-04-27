@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.ehpk
 .env
+even-terminal-*.log
+glasses_*.png

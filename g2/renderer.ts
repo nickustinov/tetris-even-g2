@@ -26,7 +26,7 @@ const FILLED = '▦'  // filled cell / active piece
 
 // 10 fullwidth cells render at exactly 200px (measured via @evenrealities/pretext);
 // add padding + border on each side so the playfield content sits flush with the frame.
-const FIELD_W = 224
+const FIELD_W = 219
 const RIGHT_X = FIELD_W + 8
 const RIGHT_W = DISPLAY_WIDTH - RIGHT_X
 
@@ -70,6 +70,22 @@ async function pushImage(bytes: number[] | null): Promise<void> {
       imageData: bytes,
     }),
   )
+}
+
+// ---------------------------------------------------------------------------
+// Bridge write serialization
+// ---------------------------------------------------------------------------
+// Concurrent SDK calls crash the BLE link to real glasses (the simulator is
+// forgiving). Every public render entry point must go through this chain so
+// that rebuildPageContainer / textContainerUpgrade calls execute strictly
+// in order, never overlapping.
+
+let bridgeChain: Promise<unknown> = Promise.resolve()
+
+function enqueue<T>(fn: () => Promise<T>): Promise<T> {
+  const next = bridgeChain.then(fn, fn)
+  bridgeChain = next.catch(() => {})
+  return next
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +210,7 @@ function gamePageConfig(): object {
         width: RIGHT_W,
         height: DISPLAY_HEIGHT,
         isEventCapture: 0,
-        paddingLength: 4,
+        paddingLength: 14,
       }),
     ],
   }
@@ -290,69 +306,70 @@ function gameOverText(): string {
 // Confirm page: bordered playfield on the left, list of options on the right
 // ---------------------------------------------------------------------------
 
-export async function showExitConfirm(): Promise<void> {
-  if (!bridge) return
-  const options = ['Continue playing', 'Exit']
-  const listH = options.length * 46
-  const listY = Math.floor((DISPLAY_HEIGHT - listH) / 2)
+export function showExitConfirm(): Promise<void> {
+  return enqueue(async () => {
+    if (!bridge) return
+    const options = ['Continue playing', 'Exit']
+    const listH = options.length * 46
+    const listY = Math.floor((DISPLAY_HEIGHT - listH) / 2)
 
-  await bridge.rebuildPageContainer(
-    new RebuildPageContainer({
-      containerTotalNum: 2,
-      textObject: [
-        new TextContainerProperty({
-          containerID: 2,
-          containerName: 'field',
-          content: renderPlayfield(),
-          xPosition: 0,
-          yPosition: 0,
-          width: FIELD_W,
-          height: DISPLAY_HEIGHT,
-          isEventCapture: 0,
-          paddingLength: 8,
-          borderWidth: 1,
-          borderColor: 10,
-          borderRadius: 4,
-        }),
-      ],
-      listObject: [
-        new ListContainerProperty({
-          containerID: 3,
-          containerName: 'confirm-opts',
-          xPosition: RIGHT_X,
-          yPosition: listY,
-          width: RIGHT_W,
-          height: listH,
-          borderWidth: 0,
-          paddingLength: 2,
-          isEventCapture: 1,
-          itemContainer: new ListItemContainerProperty({
-            itemCount: options.length,
-            itemWidth: RIGHT_W - 10,
-            isItemSelectBorderEn: 1,
-            itemName: options,
+    await bridge.rebuildPageContainer(
+      new RebuildPageContainer({
+        containerTotalNum: 2,
+        textObject: [
+          new TextContainerProperty({
+            containerID: 1,
+            containerName: 'field',
+            content: renderPlayfield(),
+            xPosition: 0,
+            yPosition: 0,
+            width: FIELD_W,
+            height: DISPLAY_HEIGHT,
+            isEventCapture: 0,
+            paddingLength: 8,
+            borderWidth: 1,
+            borderColor: 10,
+            borderRadius: 4,
           }),
-        }),
-      ],
-    }),
-  )
-  pageSetUp = true
-  currentPage = 'confirm'
+        ],
+        listObject: [
+          new ListContainerProperty({
+            containerID: 2,
+            containerName: 'confirm-opts',
+            xPosition: RIGHT_X,
+            yPosition: listY,
+            width: RIGHT_W,
+            height: listH,
+            borderWidth: 0,
+            borderColor: 0,
+            borderRadius: 0,
+            paddingLength: 4,
+            isEventCapture: 1,
+            itemContainer: new ListItemContainerProperty({
+              itemCount: options.length,
+              itemWidth: RIGHT_W - 10,
+              isItemSelectBorderEn: 1,
+              itemName: options,
+            }),
+          }),
+        ],
+      }),
+    )
+    pageSetUp = true
+    currentPage = 'confirm'
+  })
 }
 
 // ---------------------------------------------------------------------------
 // Frame push
 // ---------------------------------------------------------------------------
 
-let pushInFlight = false
+export function pushFrame(): Promise<void> {
+  return enqueue(async () => {
+    if (!bridge || !pageSetUp) return
+    // Re-check inside the queued action: state may have changed while waiting.
+    if (game.confirmingExit) return
 
-export async function pushFrame(): Promise<void> {
-  if (!bridge || !pageSetUp) return
-  if (pushInFlight) return
-  // While the exit confirm is up, leave the page alone.
-  if (currentPage === 'confirm' && game.confirmingExit) return
-  pushInFlight = true
-  try {
     // Transition into the game page (from splash, gameover, or confirm-cancel).
     if (currentPage !== 'game' && game.running) {
       await setupGamePage()
@@ -397,13 +414,11 @@ export async function pushFrame(): Promise<void> {
         content: renderInfoPanel(),
       }),
     )
-  } finally {
-    pushInFlight = false
-  }
+  })
 }
 
-export async function showSplash(): Promise<void> {
-  await setupSplashPage()
+export function showSplash(): Promise<void> {
+  return enqueue(() => setupSplashPage())
 }
 
 // ---------------------------------------------------------------------------
@@ -412,6 +427,6 @@ export async function showSplash(): Promise<void> {
 
 export async function initDisplay(): Promise<void> {
   await loadImages()
-  await setupSplashPage()
+  await enqueue(() => setupSplashPage())
   appendEventLog('Blocks: display initialized')
 }
