@@ -20,12 +20,14 @@ async function gameLoop(): Promise<void> {
     const tickMs = currentTickMs()
     const start = Date.now()
 
-    const result = tick()
+    if (!game.confirmingExit) {
+      const result = tick()
 
-    if (result.gameOver) {
-      await pushFrame()
-      appendEventLog(`Blocks: game over, score=${game.score}, lines=${game.lines}`)
-      break
+      if (result.gameOver) {
+        await pushFrame()
+        appendEventLog(`Blocks: game over, score=${game.score}, lines=${game.lines}`)
+        break
+      }
     }
 
     await pushFrame()

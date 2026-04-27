@@ -23,6 +23,7 @@ export type GameState = {
   over: boolean
   quit: boolean
   grounded: boolean   // piece touched down, locks on next tick if still stuck
+  confirmingExit: boolean  // exit confirmation dialog is showing
 }
 
 const HIGH_SCORE_KEY = 'blocks_high_score'
@@ -77,6 +78,7 @@ export function resetGame(): void {
   game.over = false
   game.quit = false
   game.grounded = false
+  game.confirmingExit = false
 }
 
 export const game: GameState = {
@@ -92,6 +94,7 @@ export const game: GameState = {
   over: false,
   quit: false,
   grounded: false,
+  confirmingExit: false,
 }
 
 export let bridge: EvenAppBridge | null = null

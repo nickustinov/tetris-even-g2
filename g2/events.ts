@@ -2,15 +2,14 @@ import { OsEventTypeList, type EvenHubEvent } from '@evenrealities/even_hub_sdk'
 import { appendEventLog } from '../_shared/log'
 import { bridge, game, updateHighScore } from './state'
 import { moveLeft, moveRight, rotate } from './game'
+import { pushFrame, showExitConfirm } from './renderer'
 
-// Forward declaration – set by app.ts to avoid circular import
 let startGameFn: () => void = () => {}
 
 export function setStartGame(fn: () => void): void {
   startGameFn = fn
 }
 
-// Scroll cooldown
 const SCROLL_COOLDOWN_MS = 150
 let lastScrollTime = 0
 
@@ -58,22 +57,57 @@ export function resolveEventType(event: EvenHubEvent): OsEventTypeList | undefin
   return undefined
 }
 
+function readListIndex(event: EvenHubEvent): number {
+  const idx = event.listEvent?.currentSelectItemIndex
+  if (typeof idx !== 'number' || idx < 0) return 0
+  return idx
+}
+
+// ---------------------------------------------------------------------------
+// Confirm-screen handlers
+// ---------------------------------------------------------------------------
+
+function cancelExit(): void {
+  game.confirmingExit = false
+  appendEventLog('ACTION: exit cancelled, resuming')
+  void pushFrame()
+}
+
+function confirmExit(): void {
+  game.confirmingExit = false
+  game.running = false
+  game.quit = true
+  updateHighScore()
+  appendEventLog('ACTION: exit confirmed')
+}
+
 // ---------------------------------------------------------------------------
 // Dispatcher
 // ---------------------------------------------------------------------------
 
 export function onEvenHubEvent(event: EvenHubEvent): void {
-  appendEventLog(`RAW: ${JSON.stringify(event)}`)
-
   const eventType = resolveEventType(event)
-  appendEventLog(`RESOLVED: type=${String(eventType)} (${typeof eventType}) running=${game.running}`)
+  appendEventLog(`Event: type=${String(eventType)} running=${game.running} confirming=${game.confirmingExit}`)
+
+  // While the confirm page is shown, route everything to its handler.
+  if (game.confirmingExit) {
+    if (eventType === OsEventTypeList.DOUBLE_CLICK_EVENT) {
+      cancelExit()
+      return
+    }
+    if (eventType === OsEventTypeList.CLICK_EVENT) {
+      const idx = readListIndex(event)
+      if (idx === 1) confirmExit()
+      else cancelExit()
+    }
+    return
+  }
 
   switch (eventType) {
     case OsEventTypeList.DOUBLE_CLICK_EVENT:
       if (game.running) {
-        game.running = false
-        game.quit = true
-        updateHighScore()
+        game.confirmingExit = true
+        void showExitConfirm()
       } else {
         void bridge?.shutDownPageContainer(1)
       }
@@ -88,17 +122,11 @@ export function onEvenHubEvent(event: EvenHubEvent): void {
       break
 
     case OsEventTypeList.SCROLL_TOP_EVENT:
-      if (!scrollThrottled() && game.running) {
-        appendEventLog('ACTION: moveLeft')
-        moveLeft()
-      }
+      if (!scrollThrottled() && game.running) moveLeft()
       break
 
     case OsEventTypeList.SCROLL_BOTTOM_EVENT:
-      if (!scrollThrottled() && game.running) {
-        appendEventLog('ACTION: moveRight')
-        moveRight()
-      }
+      if (!scrollThrottled() && game.running) moveRight()
       break
 
     default:
